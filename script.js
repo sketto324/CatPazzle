@@ -1,3 +1,4 @@
+// --- DOM Elements ---
 const gameBoard = document.getElementById('game-board');
 const message = document.getElementById('message');
 const shuffleButton = document.getElementById('shuffle-button');
@@ -5,13 +6,14 @@ const moveCountElement = document.getElementById('move-count');
 const soundToggleButton = document.getElementById('sound-toggle-button');
 const confettiCanvas = document.getElementById('confetti-canvas');
 
+// --- Constants ---
 const ROWS = 5;
 const COLS = 6;
 const CAT_COLORS = ['white', 'black', 'brown', 'gray'];
 const CATS_PER_COLUMN = 5; // This should match ROWS
 const CLEAR_COLUMN_DELAY = 1000; // ms
 
-// --- Sound Effects ---
+// --- Audio Assets ---
 // Create Audio objects to preload the sounds
 const MEOW_SOUNDS = [
     new Audio('sounds/meow1.mp3'),
@@ -21,12 +23,40 @@ const MEOW_SOUNDS = [
 const CLEAR_SOUND = new Audio('sounds/clear.mp3');
 const FANFARE_SOUND = new Audio('sounds/fanfare.mp3');
 
+// --- Game State ---
 let board = [];
 let selectedCol = null;
 let moveCount = 0;
 let isSoundEnabled = true;
 
-function generateInitialBoard() {
+// ===================================================================
+//  GAME LOGIC
+// ===================================================================
+function initGame() {
+    // Reset game state
+    moveCount = 0;
+    moveCountElement.textContent = moveCount;
+    displayMessage('');
+    selectedCol = null;
+
+    // Generate and set up the board
+    board = generateInitialBoard();
+    gameBoard.innerHTML = '';
+    // Create cell elements
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            gameBoard.appendChild(cell);
+        }
+    }
+
+    renderBoard();
+}
+
+function generateInitialBoard() { // Helper for initGame
     let newBoard;
     let attempts = 0;
     let validBoard = false;
@@ -85,30 +115,6 @@ function generateInitialBoard() {
     return newBoard;
 }
 
-function initGame() {
-    // Reset game state
-    moveCount = 0;
-    moveCountElement.textContent = moveCount;
-    displayMessage('');
-    selectedCol = null;
-
-    // Generate and set up the board
-    board = generateInitialBoard();
-    gameBoard.innerHTML = '';
-    // Create cell elements
-    for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            const cell = document.createElement('div');
-            cell.classList.add('cell');
-            cell.dataset.row = r;
-            cell.dataset.col = c;
-            gameBoard.appendChild(cell);
-        }
-    }
-
-    renderBoard();
-}
-
 function findTopCatRow(col) {
     for (let r = 0; r < ROWS; r++) {
         if (board[r][col] !== null) return r;
@@ -121,6 +127,42 @@ function findLandingRow(col) {
     if (topCatRow === 0) return -1;
     if (topCatRow === -1) return ROWS - 1;
     return topCatRow - 1;
+}
+
+function handleCellClick(col) {
+    if (selectedCol === null) {
+        // First click: select a column
+        const topRow = findTopCatRow(col);
+        if (topRow !== -1) {
+            selectedCol = col;
+            highlightCell(topRow, col, true);
+        }
+    } else {
+        // Second click: move the cat
+        const fromCol = selectedCol;
+        const toCol = col;
+        const topFromRow = findTopCatRow(fromCol);
+        highlightCell(topFromRow, fromCol, false); // Always un-highlight
+
+        if (fromCol !== toCol) {
+            const catColor = board[topFromRow][fromCol];
+            const landingRow = findLandingRow(toCol);
+            const topToRow = findTopCatRow(toCol);
+
+            if (landingRow !== -1 && (topToRow === -1 || board[topToRow][toCol] === catColor)) {
+                // Play a random meow sound on successful move
+                const randomMeow = MEOW_SOUNDS[Math.floor(Math.random() * MEOW_SOUNDS.length)];
+                playSound(randomMeow);
+                moveCount++;
+                moveCountElement.textContent = moveCount;
+                board[topFromRow][fromCol] = null;
+                board[landingRow][toCol] = catColor;
+                renderBoard();
+                checkWin();
+            }
+        }
+        selectedCol = null;
+    }
 }
 
 function highlightCell(row, col, isSelected) {
@@ -138,18 +180,6 @@ function displayMessage(text, duration = 0) {
             }
         }, duration);
     }
-}
-
-function playSound(audio) {
-    if (!isSoundEnabled) return;
-    // Rewind to the start to allow playing the sound again quickly
-    audio.currentTime = 0;
-    audio.play().catch(error => {
-        // Autoplay is often blocked by browsers until the user interacts with the page.
-        // This is fine, as our sounds are triggered by user clicks.
-        // We can log other errors if needed.
-        console.error("Error playing sound:", error);
-    });
 }
 
 function checkWin() {
@@ -173,6 +203,20 @@ function checkGameClear() {
         displayMessage('Game Clear!');
         startConfetti();
     }
+}
+
+// ===================================================================
+//  SOUND & VISUAL EFFECTS
+// ===================================================================
+
+function playSound(audio) {
+    if (!isSoundEnabled) return;
+    // Rewind to the start to allow playing the sound again quickly
+    audio.currentTime = 0;
+    audio.play().catch(error => {
+        // Autoplay is often blocked by browsers until the user interacts with the page.
+        console.error("Error playing sound:", error);
+    });
 }
 
 function startConfetti() {
@@ -229,6 +273,10 @@ function startConfetti() {
     animateConfetti();
 }
 
+// ===================================================================
+//  RENDERING
+// ===================================================================
+
 function renderBoard() {
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
@@ -263,49 +311,25 @@ function renderBoard() {
     }
 }
 
-gameBoard.addEventListener('click', (e) => {
-    const cell = e.target.closest('.cell');
-    if (!cell) return;
-    const col = parseInt(cell.dataset.col);
+// ===================================================================
+//  EVENT LISTENERS & INITIALIZATION
+// ===================================================================
 
-    if (selectedCol === null) {
-        const topRow = findTopCatRow(col);
-        if (topRow !== -1) {
-            selectedCol = col;
-            highlightCell(topRow, col, true);
-        }
-    } else {
-        const fromCol = selectedCol;
-        const toCol = col;
-        const topFromRow = findTopCatRow(fromCol);
-        highlightCell(topFromRow, fromCol, false);
+function setupEventListeners() {
+    gameBoard.addEventListener('click', (e) => {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        const col = parseInt(cell.dataset.col);
+        handleCellClick(col);
+    });
 
-        if (fromCol !== toCol) {
-            const catColor = board[topFromRow][fromCol];
-            const landingRow = findLandingRow(toCol);
-            const topToRow = findTopCatRow(toCol);
+    shuffleButton.addEventListener('click', initGame);
 
-            if (landingRow !== -1 && (topToRow === -1 || board[topToRow][toCol] === catColor)) {
-                // Play a random meow sound on successful move
-                const randomMeow = MEOW_SOUNDS[Math.floor(Math.random() * MEOW_SOUNDS.length)];
-                playSound(randomMeow);
-                moveCount++;
-                moveCountElement.textContent = moveCount;
-                board[topFromRow][fromCol] = null;
-                board[landingRow][toCol] = catColor;
-                renderBoard();
-                checkWin();
-            }
-        }
-        selectedCol = null;
-    }
-});
+    soundToggleButton.addEventListener('click', () => {
+        isSoundEnabled = !isSoundEnabled;
+        soundToggleButton.textContent = isSoundEnabled ? '🔊' : '🔇';
+    });
+}
 
-shuffleButton.addEventListener('click', initGame);
-
-soundToggleButton.addEventListener('click', () => {
-    isSoundEnabled = !isSoundEnabled;
-    soundToggleButton.textContent = isSoundEnabled ? '🔊' : '🔇';
-});
-
+setupEventListeners();
 initGame();
