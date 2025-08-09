@@ -15,9 +15,13 @@
     <div id="game-board"></div>
     <div id="game-controls">
         <div id="move-counter">手数: <span id="move-count">0</span></div>
-        <button id="shuffle-button">シャッフル</button>
+        <div class="control-buttons">
+            <button id="shuffle-button">シャッフル</button>
+            <button id="sound-toggle-button" title="サウンドのオン/オフ">🔊</button>
+        </div>
     </div>
     <div id="message" role="status" aria-live="polite"></div>
+    <canvas id="confetti-canvas"></canvas>
     <script src="script.js"></script>
 </body>
 </html>

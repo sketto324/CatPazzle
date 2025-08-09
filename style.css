@@ -124,6 +124,11 @@ h1 {
     transform-origin: bottom left;
 }
 
+.control-buttons {
+    display: flex;
+    gap: 10px;
+}
+
 #game-controls {
     display: flex;
     justify-content: space-between;
@@ -147,6 +152,21 @@ h1 {
     font-size: clamp(0.9em, 3.5vw, 1em); /* Responsive font size */
     cursor: pointer;
     transition: background-color 0.3s ease;
+}
+
+#sound-toggle-button {
+    background-color: #776e65;
+    color: white;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 45px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
 }
 
 #shuffle-button:hover {
@@ -192,4 +212,14 @@ h1 {
     font-weight: bold;
     height: 30px;
     text-align: center;
+}
+
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
 }

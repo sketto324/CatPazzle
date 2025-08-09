@@ -2,6 +2,8 @@ const gameBoard = document.getElementById('game-board');
 const message = document.getElementById('message');
 const shuffleButton = document.getElementById('shuffle-button');
 const moveCountElement = document.getElementById('move-count');
+const soundToggleButton = document.getElementById('sound-toggle-button');
+const confettiCanvas = document.getElementById('confetti-canvas');
 
 const ROWS = 5;
 const COLS = 6;
@@ -22,6 +24,7 @@ const FANFARE_SOUND = new Audio('sounds/fanfare.mp3');
 let board = [];
 let selectedCol = null;
 let moveCount = 0;
+let isSoundEnabled = true;
 
 function generateInitialBoard() {
     let newBoard;
@@ -138,6 +141,7 @@ function displayMessage(text, duration = 0) {
 }
 
 function playSound(audio) {
+    if (!isSoundEnabled) return;
     // Rewind to the start to allow playing the sound again quickly
     audio.currentTime = 0;
     audio.play().catch(error => {
@@ -167,7 +171,62 @@ function checkGameClear() {
     if (board.flat().every(cell => cell === null)) {
         playSound(FANFARE_SOUND);
         displayMessage('Game Clear!');
+        startConfetti();
     }
+}
+
+function startConfetti() {
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    const confettiColors = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590'];
+
+    function createConfetti() {
+        const particleCount = 200;
+        confettiParticles = [];
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        for (let i = 0; i < particleCount; i++) {
+            confettiParticles.push({
+                x: Math.random() * confettiCanvas.width,
+                y: -Math.random() * confettiCanvas.height * 0.5,
+                radius: Math.random() * 5 + 2,
+                color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+                speedX: Math.random() * 6 - 3,
+                speedY: Math.random() * 3 + 2,
+                gravity: 0.05,
+                opacity: 1,
+                fade: Math.random() * 0.01 + 0.005
+            });
+        }
+    }
+
+    function animateConfetti() {
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiParticles.forEach((p, index) => {
+            p.speedY += p.gravity;
+            p.x += p.speedX;
+            p.y += p.speedY;
+            p.opacity -= p.fade;
+            if (p.y > confettiCanvas.height || p.opacity <= 0) {
+                confettiParticles.splice(index, 1);
+            } else {
+                confettiCtx.beginPath();
+                confettiCtx.globalAlpha = p.opacity;
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                confettiCtx.fill();
+            }
+        });
+        confettiCtx.globalAlpha = 1;
+        if (confettiParticles.length > 0) {
+            requestAnimationFrame(animateConfetti);
+        } else {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+    }
+
+    createConfetti();
+    animateConfetti();
 }
 
 function renderBoard() {
@@ -243,5 +302,10 @@ gameBoard.addEventListener('click', (e) => {
 });
 
 shuffleButton.addEventListener('click', initGame);
+
+soundToggleButton.addEventListener('click', () => {
+    isSoundEnabled = !isSoundEnabled;
+    soundToggleButton.textContent = isSoundEnabled ? '🔊' : '🔇';
+});
 
 initGame();
