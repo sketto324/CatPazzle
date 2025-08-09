@@ -1,18 +1,33 @@
 const gameBoard = document.getElementById('game-board');
 const message = document.getElementById('message');
 const shuffleButton = document.getElementById('shuffle-button');
+const moveCountElement = document.getElementById('move-count');
 
 const ROWS = 5;
 const COLS = 6;
 const CAT_COLORS = ['white', 'black', 'brown', 'gray'];
 const CATS_PER_COLUMN = 5; // This should match ROWS
+const CLEAR_COLUMN_DELAY = 1000; // ms
+
+// --- Sound Effects ---
+// Create Audio objects to preload the sounds
+const MEOW_SOUNDS = [
+    new Audio('sounds/meow1.mp3'),
+    new Audio('sounds/meow2.mp3'),
+    new Audio('sounds/meow3.mp3')
+];
+const CLEAR_SOUND = new Audio('sounds/clear.mp3');
+const FANFARE_SOUND = new Audio('sounds/fanfare.mp3');
 
 let board = [];
 let selectedCol = null;
+let moveCount = 0;
 
 function initGame() {
     gameBoard.innerHTML = '';
     board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+    moveCount = 0;
+    moveCountElement.textContent = moveCount;
 
     let attempts = 0;
     let validBoard = false;
@@ -101,24 +116,48 @@ function highlightCell(row, col, isSelected) {
     if (cell) cell.classList.toggle('selected', isSelected);
 }
 
+function displayMessage(text, duration = 0) {
+    message.textContent = text;
+    if (duration > 0) {
+        setTimeout(() => {
+            // Clear message only if it hasn't been changed by another call
+            if (message.textContent === text) {
+                message.textContent = '';
+            }
+        }, duration);
+    }
+}
+
+function playSound(audio) {
+    // Rewind to the start to allow playing the sound again quickly
+    audio.currentTime = 0;
+    audio.play().catch(error => {
+        // Autoplay is often blocked by browsers until the user interacts with the page.
+        // This is fine, as our sounds are triggered by user clicks.
+        // We can log other errors if needed.
+        console.error("Error playing sound:", error);
+    });
+}
+
 function checkWin() {
     for (let c = 0; c < COLS; c++) {
         const firstCat = board[0][c];
         if (firstCat && board.every(row => row[c] === firstCat)) {
-            message.textContent = `Cat ${firstCat} is complete!`;
+            playSound(CLEAR_SOUND);
+            displayMessage(`Cat ${firstCat} is complete!`, CLEAR_COLUMN_DELAY);
             setTimeout(() => {
                 for (let r = 0; r < ROWS; r++) board[r][c] = null;
-                message.textContent = "";
                 renderBoard();
                 checkGameClear();
-            }, 1000);
+            }, CLEAR_COLUMN_DELAY);
         }
     }
 }
 
 function checkGameClear() {
     if (board.flat().every(cell => cell === null)) {
-        message.textContent = 'Game Clear!';
+        playSound(FANFARE_SOUND);
+        displayMessage('Game Clear!');
     }
 }
 
@@ -179,6 +218,11 @@ gameBoard.addEventListener('click', (e) => {
             const topToRow = findTopCatRow(toCol);
 
             if (landingRow !== -1 && (topToRow === -1 || board[topToRow][toCol] === catColor)) {
+                // Play a random meow sound on successful move
+                const randomMeow = MEOW_SOUNDS[Math.floor(Math.random() * MEOW_SOUNDS.length)];
+                playSound(randomMeow);
+                moveCount++;
+                moveCountElement.textContent = moveCount;
                 board[topFromRow][fromCol] = null;
                 board[landingRow][toCol] = catColor;
                 renderBoard();

@@ -115,6 +115,19 @@ h1 {
     transform-origin: bottom left;
 }
 
+#game-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 430px; /* Game board width (6*60 + 5*10 + 2*10) */
+    margin-top: 20px;
+}
+
+#move-counter {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
 #shuffle-button {
     background-color: #88b04b; /* Greenish color */
     color: white;
@@ -123,7 +136,6 @@ h1 {
     border-radius: 5px;
     font-size: 1em;
     cursor: pointer;
-    margin-top: 20px;
     transition: background-color 0.3s ease;
 }
 
