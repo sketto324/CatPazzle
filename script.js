@@ -23,17 +23,13 @@ let board = [];
 let selectedCol = null;
 let moveCount = 0;
 
-function initGame() {
-    gameBoard.innerHTML = '';
-    board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-    moveCount = 0;
-    moveCountElement.textContent = moveCount;
-
+function generateInitialBoard() {
+    let newBoard;
     let attempts = 0;
     let validBoard = false;
 
     while (!validBoard && attempts < 100) { // Try up to 100 times to generate a valid board
-        board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+        newBoard = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
         // Create a "bag" of cats to draw from. 4 colors * 5 cats each = 20 cats.
         const catBag = CAT_COLORS.flatMap(color => Array(CATS_PER_COLUMN).fill(color));
 
@@ -47,7 +43,7 @@ function initGame() {
         const initialColumns = COLS - 2;
         for (let c = 0; c < initialColumns; c++) {
             for (let r = 0; r < ROWS; r++) {
-                board[r][c] = catBag.pop();
+                newBoard[r][c] = catBag.pop();
             }
         }
 
@@ -57,7 +53,7 @@ function initGame() {
             let consecutiveCount = 0;
             let lastColor = null;
             for (let r = ROWS - 1; r >= 0; r--) { // Check from bottom up
-                const currentColor = board[r][c];
+                const currentColor = newBoard[r][c];
                 if (currentColor !== null) {
                     if (currentColor === lastColor) {
                         consecutiveCount++;
@@ -83,6 +79,19 @@ function initGame() {
         console.warn("Could not generate a valid board after 100 attempts. The game might start with more than 2 consecutive cats of the same color.");
     }
 
+    return newBoard;
+}
+
+function initGame() {
+    // Reset game state
+    moveCount = 0;
+    moveCountElement.textContent = moveCount;
+    displayMessage('');
+    selectedCol = null;
+
+    // Generate and set up the board
+    board = generateInitialBoard();
+    gameBoard.innerHTML = '';
     // Create cell elements
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {

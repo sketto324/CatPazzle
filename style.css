@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Arial', sans-serif;
     display: flex;
@@ -5,6 +9,9 @@ body {
     align-items: center;
     background-color: #faf8ef;
     color: #776e65;
+    padding: 10px;
+    min-height: 100vh;
+    margin: 0;
 }
 
 h1 {
@@ -13,19 +20,20 @@ h1 {
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(6, 60px);
-    grid-column-gap: 10px;
+    grid-template-columns: repeat(6, 1fr);
+    grid-column-gap: 2%;
     grid-row-gap: 0;
     border: 10px solid #bbada0;
     border-radius: 6px;
     padding: 10px;
     background-color: #bbada0;
+    width: 100%;
+    max-width: 430px; /* Keep original aspect on large screens */
 }
 
 .cell {
-    width: 60px;
-    height: 60px;
-    box-sizing: border-box;
+    /* width and height are now determined by the grid */
+    aspect-ratio: 1 / 1; /* Keep cells square */
     position: relative;
 }
 
@@ -74,44 +82,45 @@ h1 {
 
 .eye {
     position: absolute;
-    top: 22px;
-    width: 8px;
-    height: 8px;
+    top: 37%;
+    width: 13%;
+    height: 13%;
     background-color: #333;
     border-radius: 50%;
 }
-.eye.left { left: 15px; }
-.eye.right { right: 15px; }
+.eye.left { left: 25%; }
+.eye.right { right: 25%; }
 
 .mouth {
     position: absolute;
-    top: 35px;
+    top: 58%;
     left: 50%;
     transform: translateX(-50%);
-    width: 18px; /* Slightly wider */
-    height: 10px; /* Taller for more curve */
+    width: 30%;
+    height: 17%;
     overflow: hidden; /* Hide parts outside the mouth area */
 }
 
 .mouth::before, .mouth::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    width: 10px; /* Half the total width */
-    height: 8px; /* Taller for more curve */
+    box-sizing: border-box;
+    bottom: 5%;
+    width: 55%;
+    height: 80%;
     border-bottom: 2px solid #333;
     border-radius: 0 0 100% 100%;
 }
 
 .mouth::before {
     left: 0;
-    transform: rotate(10deg); /* More rotation */
+    transform: rotate(10deg);
     transform-origin: bottom right;
 }
 
 .mouth::after {
     right: 0;
-    transform: rotate(-10deg); /* More rotation */
+    transform: rotate(-10deg);
     transform-origin: bottom left;
 }
 
@@ -119,12 +128,13 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 430px; /* Game board width (6*60 + 5*10 + 2*10) */
+    width: 100%;
+    max-width: 430px;
     margin-top: 20px;
 }
 
 #move-counter {
-    font-size: 1.2em;
+    font-size: clamp(1em, 4vw, 1.2em); /* Responsive font size */
     font-weight: bold;
 }
 
@@ -134,7 +144,7 @@ h1 {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
-    font-size: 1em;
+    font-size: clamp(0.9em, 3.5vw, 1em); /* Responsive font size */
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
@@ -144,26 +154,28 @@ h1 {
 }
 
 .ear {
+    /* Replaced border-based triangle with a more responsive clip-path triangle */
     position: absolute;
-    top: -8px;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 15px solid #333; /* Ear color */
+    top: -4%;
+    width: 34%;
+    height: 25%;
+    background-color: #333;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
 .ear.left { 
-    left: 5px; 
+    left: 8%; 
     transform: rotate(-20deg);
 }
 .ear.right { 
-    right: 5px; 
+    right: 8%; 
     transform: rotate(20deg);
 }
 
 #instructions {
     background-color: #bbada0;
+    width: 100%;
+    max-width: 430px;
     padding: 10px 20px;
     border-radius: 6px;
     margin-bottom: 20px;
@@ -176,7 +188,8 @@ h1 {
 
 #message {
     margin-top: 20px;
-    font-size: 1.5em;
+    font-size: clamp(1.2em, 5vw, 1.5em); /* Responsive font size */
     font-weight: bold;
     height: 30px;
+    text-align: center;
 }
